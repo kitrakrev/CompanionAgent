@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Companion Agent Canvas Interface</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Companion Agent Canvas Interface</h1>
+            <div class="status-indicator">
+                <span id="connection-status" class="status-offline">Offline</span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Panel: Canvas and Mermaid -->
+            <div class="left-panel">
+                <div class="canvas-container">
+                    <div class="canvas-header">
+                        <h3>Interactive Canvas</h3>
+                        <div class="canvas-controls">
+                            <button id="clear-canvas" class="btn btn-secondary">Clear Canvas</button>
+                            <button id="undo-last" class="btn btn-secondary">Undo Last</button>
+                            <input type="color" id="brush-color" value="#000000" title="Brush Color">
+                            <input type="range" id="brush-size" min="1" max="20" value="5" title="Brush Size">
+                        </div>
+                    </div>
+                    <canvas id="main-canvas" width="800" height="600"></canvas>
+                </div>
+
+                <div class="mermaid-container">
+                    <div class="mermaid-header">
+                        <h3>Mermaid Diagrams</h3>
+                        <button id="add-mermaid" class="btn btn-primary">Add Diagram</button>
+                    </div>
+                    <div id="mermaid-diagrams" class="mermaid-diagrams">
+                        <!-- Mermaid diagrams will be added here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Collapsible Agent Management and Conversations -->
+            <div class="right-panel" id="right-panel">
+                <div class="panel-toggle" id="panel-toggle">
+                    <span class="toggle-icon">◀</span>
+                </div>
+                
+                <div class="panel-content">
+                    <!-- Agent Management Section -->
+                    <div class="agent-management">
+                                            <div class="agent-header">
+                        <h3>Agent Management</h3>
+                        <div class="agent-controls">
+                            <button id="discover-agents-btn" class="btn btn-secondary">Discover</button>
+                            <button id="add-agent-btn" class="btn btn-primary">Add Agent</button>
+                        </div>
+                    </div>
+                        
+                        <div class="agent-list" id="agent-list">
+                            <!-- Agents will be listed here -->
+                        </div>
+                    </div>
+
+                    <!-- Conversation Section -->
+                    <div class="conversation-section">
+                        <div class="conversation-header">
+                            <h3>Agent Conversations</h3>
+                            <div class="conversation-controls">
+                                <button id="clear-conversation" class="btn btn-secondary btn-small">Clear</button>
+                                <button id="export-conversation" class="btn btn-secondary btn-small">Export</button>
+                            </div>
+                        </div>
+                        
+                        <div class="conversation-container">
+                            <div id="conversation-messages" class="conversation-messages">
+                                <!-- Conversation messages will appear here -->
+                            </div>
+                            
+                            <div class="conversation-input">
+                                <div class="input-row">
+                                    <textarea id="user-message" placeholder="Type your message to agents..."></textarea>
+                                    <button id="send-user-message" class="btn btn-primary">Send</button>
+                                </div>
+                                <div class="input-row">
+                                    <textarea id="query-input" placeholder="Or send a specific query to all agents..."></textarea>
+                                    <button id="send-query" class="btn btn-primary">Query All</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Agent Modal -->
+    <div id="agent-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Agent</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="agent-form">
+                    <div class="form-group">
+                        <label for="agent-name">Agent Name:</label>
+                        <input type="text" id="agent-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="agent-description">Description:</label>
+                        <textarea id="agent-description" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="agent-color">Color:</label>
+                        <input type="color" id="agent-color" value="#3b82f6">
+                    </div>
+                    <div class="form-group">
+                        <label for="agent-server-url">Server URL:</label>
+                        <input type="url" id="agent-server-url" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Available Tools:</label>
+                        <div class="tool-checkboxes">
+                            <label><input type="checkbox" value="drawing"> Drawing</label>
+                            <label><input type="checkbox" value="mermaid"> Mermaid Diagrams</label>
+                            <label><input type="checkbox" value="text"> Text Analysis</label>
+                            <label><input type="checkbox" value="search"> Search</label>
+                            <label><input type="checkbox" value="coordination"> Coordination</label>
+                            <label><input type="checkbox" value="planning"> Planning</label>
+                            <label><input type="checkbox" value="visualization"> Visualization</label>
+                            <label><input type="checkbox" value="research"> Research</label>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Add Agent</button>
+                        <button type="button" class="btn btn-secondary" id="cancel-agent">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Agent Modal -->
+    <div id="edit-agent-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Agent</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="edit-agent-form">
+                    <input type="hidden" id="edit-agent-id">
+                    <div class="form-group">
+                        <label for="edit-agent-name">Agent Name:</label>
+                        <input type="text" id="edit-agent-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-agent-description">Description:</label>
+                        <textarea id="edit-agent-description" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-agent-color">Color:</label>
+                        <input type="color" id="edit-agent-color">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-agent-server-url">Server URL:</label>
+                        <input type="url" id="edit-agent-server-url" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Available Tools:</label>
+                        <div class="tool-checkboxes" id="edit-tool-checkboxes">
+                            <label><input type="checkbox" value="drawing"> Drawing</label>
+                            <label><input type="checkbox" value="mermaid"> Mermaid Diagrams</label>
+                            <label><input type="checkbox" value="text"> Text Analysis</label>
+                            <label><input type="checkbox" value="search"> Search</label>
+                            <label><input type="checkbox" value="coordination"> Coordination</label>
+                            <label><input type="checkbox" value="planning"> Planning</label>
+                            <label><input type="checkbox" value="visualization"> Visualization</label>
+                            <label><input type="checkbox" value="research"> Research</label>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Update Agent</button>
+                        <button type="button" class="btn btn-secondary" id="cancel-edit-agent">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Mermaid Modal -->
+    <div id="mermaid-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Mermaid Diagram</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="mermaid-form">
+                    <div class="form-group">
+                        <label for="mermaid-content">Mermaid Code:</label>
+                        <textarea id="mermaid-content" rows="10" placeholder="Enter Mermaid diagram code..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="mermaid-position-x">Position X:</label>
+                        <input type="number" id="mermaid-position-x" value="50">
+                    </div>
+                    <div class="form-group">
+                        <label for="mermaid-position-y">Position Y:</label>
+                        <input type="number" id="mermaid-position-y" value="50">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Add Diagram</button>
+                        <button type="button" class="btn btn-secondary" id="cancel-mermaid">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', path='/js/canvas.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/agents.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/conversation.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/websocket.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/main.js') }}"></script>
+</body>
+</html> 
